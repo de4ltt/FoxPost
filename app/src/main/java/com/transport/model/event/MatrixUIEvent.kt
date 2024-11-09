@@ -9,5 +9,6 @@ sealed class MatrixUIEvent {
     data class ChangeB(val index: Int, val newValue: Int): MatrixUIEvent()
     data class ChangeC(val position: Pair<Int, Int>, val newValue: Int): MatrixUIEvent()
 
-
+    data class DeleteA(val index: Int): MatrixUIEvent()
+    data class DeleteB(val index: Int): MatrixUIEvent()
 }
