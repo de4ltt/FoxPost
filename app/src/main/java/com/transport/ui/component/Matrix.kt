@@ -11,15 +11,18 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,11 +65,11 @@ fun Matrix(
 
     val contentSpacing = 5.dp
 
-    var _tileSize: Dp by remember {
-        mutableStateOf(0.dp)
+    var _tileSize: Float by rememberSaveable {
+        mutableFloatStateOf(0f)
     }
     val tileSize by animateDpAsState(
-        targetValue = _tileSize,
+        targetValue = _tileSize.dp,
         label = ""
     )
 
@@ -77,7 +80,8 @@ fun Matrix(
         Box(
             modifier = modifier
                 .padding(vertical = 20.dp, horizontal = 20.dp)
-                .fillMaxSize()
+                .fillMaxWidth()
+                .wrapContentHeight()
                 .transformable(transformableState)
                 .graphicsLayer(
                     scaleX = scale,
@@ -87,22 +91,22 @@ fun Matrix(
                 )
                 .onGloballyPositioned { layout ->
 
-                val width = layout.size.width
-                val tileQuantity = when (a.size) {
+                    val width = layout.size.width
+                    val tileQuantity = when (a.size) {
                         in 0..3 -> 5
                         9 -> 10
                         else -> a.size + 2
                     }
-                val spacing = with(localDensity) { contentSpacing.toPx() }
+                    val spacing = with(localDensity) { contentSpacing.toPx() }
 
-                _tileSize = with(localDensity) {
-                    calculateTileSize(
-                        width = width,
-                        spacing = spacing,
-                        tileQuantity = tileQuantity
-                    ).toDp()
-                }
-            },
+                    _tileSize = with(localDensity) {
+                        calculateTileSize(
+                            width = width,
+                            spacing = spacing,
+                            tileQuantity = tileQuantity
+                        ).toDp()
+                    }.value
+                },
             contentAlignment = Alignment.Center
         ) {
             Column(

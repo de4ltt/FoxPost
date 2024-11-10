@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.material.ripple.rememberRipple
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,11 +23,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 private enum class ButtonState { Pressed, Idle }
 
 @SuppressLint("ReturnFromAwaitPointerEventScope")
-fun Modifier.bounceClick(onClick: () -> Unit) = composed {
+fun Modifier.bounceClick(
+    enabled: Boolean = true,
+    enableRipple: Boolean = true,
+    onClick: () -> Unit
+) = composed {
 
     var buttonState by remember { mutableStateOf(ButtonState.Idle) }
     val scale by animateFloatAsState(
-        targetValue = if (buttonState == ButtonState.Pressed) 0.90f else 1f
+        targetValue = if (buttonState == ButtonState.Pressed && enabled) 0.90f else 1f
     )
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -38,8 +43,8 @@ fun Modifier.bounceClick(onClick: () -> Unit) = composed {
         }
         .clickable(
             interactionSource = interactionSource,
-            indication = null,
-            onClick = { onClick() }
+            indication = if (enableRipple && enabled) rememberRipple() else null,
+            onClick = { if (enabled) onClick() }
         )
         .pointerInput(buttonState) {
             awaitPointerEventScope {

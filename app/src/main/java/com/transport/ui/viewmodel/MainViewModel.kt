@@ -5,14 +5,20 @@ import androidx.lifecycle.viewModelScope
 import com.transport.model.CTile
 import com.transport.model.Matrix
 import com.transport.model.event.MatrixUIEvent
+import com.transport.model.state.ScreenMode
+import com.transport.model.state.ScreenUIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 class MainViewModel : ViewModel() {
 
     private val _curMatrix: MutableStateFlow<Matrix> = MutableStateFlow(Matrix())
     val curMatrix = _curMatrix.asStateFlow()
+
+    private val _screenUIState: MutableStateFlow<ScreenUIState> = MutableStateFlow(ScreenUIState())
+    val screenUIState = _screenUIState.asStateFlow()
 
     fun onEvent(event: MatrixUIEvent) = when (event) {
         MatrixUIEvent.AddA -> addA()
@@ -22,6 +28,8 @@ class MainViewModel : ViewModel() {
         is MatrixUIEvent.ChangeC -> changeC(event.position, event.newValue)
         is MatrixUIEvent.DeleteA -> deleteA(event.index)
         is MatrixUIEvent.DeleteB -> deleteB(event.index)
+
+        is MatrixUIEvent.ChangeScreenMode -> changeScreenMode(event.screenMode)
     }
 
     private fun addA() = viewModelScope.launch {
@@ -43,7 +51,7 @@ class MainViewModel : ViewModel() {
 
 
         _curMatrix.value = _curMatrix.value.copy(
-            c = _curMatrix.value.c + listOf(List<CTile>(_curMatrix.value.a.size) { CTile() })
+            c = _curMatrix.value.c + listOf(List(_curMatrix.value.a.size) { CTile() })
         )
     }
 
@@ -101,7 +109,7 @@ class MainViewModel : ViewModel() {
     }
 
     private fun deleteB(index: Int) = viewModelScope.launch {
-        val newB = _curMatrix.value.b.filterIndexed() { i, _ -> i != index }
+        val newB = _curMatrix.value.b.filterIndexed { i, _ -> i != index }
 
         val newC = _curMatrix.value.c.filterIndexed { i, _ ->
             i != index
@@ -111,5 +119,27 @@ class MainViewModel : ViewModel() {
             b = newB,
             c = newC
         )
+    }
+
+    private fun changeScreenMode(mode: ScreenMode) = viewModelScope.launch {
+        _screenUIState.value = _screenUIState.value.copy(
+            screenMode = mode
+        )
+    }
+
+
+    init {
+
+        viewModelScope.launch {
+            _curMatrix.collectLatest { matrix ->
+                _screenUIState.value = _screenUIState.value.copy(
+                    isReady = matrix.a.all { it != null } && matrix.b.all { it != null } && matrix.c.all { list ->
+                        list.all { item ->
+                            item.c != null
+                        }
+                    }
+                )
+            }
+        }
     }
 }

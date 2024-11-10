@@ -1,6 +1,5 @@
 package com.transport.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,7 +8,14 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import com.transport.R
 
 private val DarkColorScheme = darkColorScheme(
     primary = Red,
@@ -35,10 +41,22 @@ private val LightColorScheme = lightColorScheme(
     */
 )
 
+val LocalExtendedFonts = staticCompositionLocalOf { ExtendedFonts() }
+
+val extendedFonts = ExtendedFonts(
+    rubikFontFamily = FontFamily(
+        Font(R.font.rubik_light, FontWeight.Light),
+        Font(R.font.rubik_regular, FontWeight.W400),
+        Font(R.font.rubik_medium, FontWeight.Medium),
+        Font(R.font.rubik_semi_bold, FontWeight.SemiBold),
+        Font(R.font.rubik_bold, FontWeight.Bold),
+        Font(R.font.rubik_black, FontWeight.Black)
+    )
+)
+
 @Composable
 fun TransportTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
@@ -52,9 +70,20 @@ fun TransportTheme(
         else -> LightColorScheme
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalExtendedFonts provides extendedFonts
+    ) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
+}
+
+object ExtendedTheme {
+    val extendedFonts: ExtendedFonts
+        @Composable
+        @ReadOnlyComposable
+        get() = LocalExtendedFonts.current
 }
