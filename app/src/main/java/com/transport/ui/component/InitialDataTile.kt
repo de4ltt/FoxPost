@@ -75,7 +75,7 @@ fun InitialDataTile(
                     )
                 )
             }
-            .padding(Dimens.uniHorizontalPadding),
+            .padding(Dimens.uniPadding),
         contentAlignment = Alignment.BottomStart
     ) {
         Column(
@@ -87,20 +87,20 @@ fun InitialDataTile(
         ) {
 
             RubikFontBasicText(
-                text = Strings.initialData,
+                text = Strings.INITIAL_DATA,
                 style = TextStyle(
                     fontWeight = FontWeight.Medium,
-                    fontSize = TextUnits.initialData,
+                    fontSize = TextUnits.INITIAL_DATA,
                     color = Color.White
                 )
             )
 
             RubikFontBasicText(
-                text = Strings.cringyText,
+                text = Strings.CRINGY_TEXT,
                 basicMarqueeEnabled = false,
                 style = TextStyle(
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = TextUnits.cringyText,
+                    fontSize = TextUnits.CRINGY_TEXT,
                     color = Color.White
                 )
             )
@@ -125,10 +125,10 @@ fun InitialDataTile(
                 )
 
                 RubikFontBasicText(
-                    text = Strings.enter,
+                    text = Strings.ENTER,
                     style = TextStyle(
                         fontWeight = FontWeight.W400,
-                        fontSize = TextUnits.enter,
+                        fontSize = TextUnits.ENTER,
                         color = Color.White
                     )
                 )

@@ -1,5 +1,6 @@
 package com.transport.ui.viewmodel
 
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.transport.model.CTile
@@ -30,6 +31,13 @@ class MainViewModel : ViewModel() {
         is MatrixUIEvent.DeleteB -> deleteB(event.index)
 
         is MatrixUIEvent.ChangeScreenMode -> changeScreenMode(event.screenMode)
+        is MatrixUIEvent.UpdateTileSize -> updateTileSize(event.tileSize)
+    }
+
+    private fun updateTileSize(tileSize: Dp) = viewModelScope.launch {
+        _curMatrix.value = _curMatrix.value.copy(
+            tileSize = tileSize
+        )
     }
 
     private fun addA() = viewModelScope.launch {

@@ -1,8 +1,11 @@
 package com.transport.model.event
 
+import androidx.compose.ui.unit.Dp
 import com.transport.model.state.ScreenMode
 
 sealed class MatrixUIEvent {
+
+    data class UpdateTileSize(val tileSize: Dp): MatrixUIEvent()
 
     data object AddA: MatrixUIEvent()
     data object AddB: MatrixUIEvent()

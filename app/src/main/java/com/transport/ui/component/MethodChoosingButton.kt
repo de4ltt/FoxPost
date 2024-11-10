@@ -1,8 +1,8 @@
 package com.transport.ui.component
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 
 import com.transport.ui.theme.Dimens
 import com.transport.ui.theme.Peach
@@ -30,6 +29,7 @@ import com.transport.ui.theme.Red
 import com.transport.ui.theme.TextUnits
 import com.transport.ui.util.bounceClick
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MethodChoosingButton(
     modifier: Modifier = Modifier
@@ -57,7 +57,7 @@ fun MethodChoosingButton(
                     )
                 )
             }
-            .padding(Dimens.uniHorizontalPadding),
+            .padding(Dimens.uniPadding),
         contentAlignment = Alignment.Center
     ) {
 

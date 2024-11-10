@@ -21,12 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.ColorProducer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import com.transport.ui.theme.Black
 
 import com.transport.ui.theme.Dimens
@@ -74,12 +71,12 @@ fun ReadyButton(
         if (it)
             Box(
                 modifier = modifier
-                    .clip(RoundedCornerShape(Dimens.uniCorners))
+                    .fillMaxWidth()
                     .bounceClick(
                         enabled = isActive,
                         onClick = { onClick() }
                     )
-                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(Dimens.uniCorners))
                     .drawBehind {
                         drawRect(
                             Brush.linearGradient(
@@ -87,7 +84,7 @@ fun ReadyButton(
                             )
                         )
                     }
-                    .padding(Dimens.uniHorizontalPadding),
+                    .padding(Dimens.uniPadding),
                 contentAlignment = Alignment.Center
             ) {
 

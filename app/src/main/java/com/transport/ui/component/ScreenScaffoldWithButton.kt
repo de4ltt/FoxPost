@@ -29,8 +29,8 @@ fun ScreenScaffoldWithButton(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             content()
-
-            button()
         }
+        
+        button()
     }
 }

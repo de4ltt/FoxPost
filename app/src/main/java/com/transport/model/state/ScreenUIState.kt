@@ -11,6 +11,6 @@ enum class ScreenMode {
 
 data class ScreenUIState(
     val isReady: Boolean = false,
-    val title: String = Strings.INITIAL_CONDITIONS,
+    val title: String = Strings.INITIAL_CONDITIONS_MATRIX,
     val screenMode: ScreenMode = ScreenMode.DEFAULT
 )
