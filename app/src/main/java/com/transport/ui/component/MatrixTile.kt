@@ -102,11 +102,11 @@ fun MatrixTile(
             )
             .clip(tileShape)
             .background(tileColor)
-            .combinedClickable(
+            /*.combinedClickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onLongClick = { onLongClick() }
-            ) {},
+            ) {}*/,
         contentAlignment = Alignment.Center
     ) {
         Text(

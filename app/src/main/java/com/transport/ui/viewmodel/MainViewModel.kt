@@ -2,6 +2,7 @@ package com.transport.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.transport.model.CTile
 import com.transport.model.Matrix
 import com.transport.model.event.MatrixUIEvent
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +31,7 @@ class MainViewModel : ViewModel() {
 
         _curMatrix.value = _curMatrix.value.copy(
             c = _curMatrix.value.c.map {
-                it + null
+                it + CTile()
             }
         )
     }
@@ -42,7 +43,7 @@ class MainViewModel : ViewModel() {
 
 
         _curMatrix.value = _curMatrix.value.copy(
-            c = _curMatrix.value.c + listOf(List<Int?>(_curMatrix.value.a.size) { null })
+            c = _curMatrix.value.c + listOf(List<CTile>(_curMatrix.value.a.size) { CTile() })
         )
     }
 
@@ -73,7 +74,7 @@ class MainViewModel : ViewModel() {
             if (i == position.first)
                 value.mapIndexed { j, item ->
                     if (j == position.second)
-                        newValue
+                        item.copy(c = newValue)
                     else item
                 }
             else value
@@ -87,7 +88,7 @@ class MainViewModel : ViewModel() {
     private fun deleteA(index: Int) = viewModelScope.launch {
         val newA = _curMatrix.value.a.filterIndexed() { i, _ -> i != index }
 
-        val newC = _curMatrix.value.c.mapIndexed { i, value ->
+        val newC = _curMatrix.value.c.map { value ->
             value.filterIndexed { j, _ ->
                 j != index
             }
@@ -102,7 +103,7 @@ class MainViewModel : ViewModel() {
     private fun deleteB(index: Int) = viewModelScope.launch {
         val newB = _curMatrix.value.b.filterIndexed() { i, _ -> i != index }
 
-        val newC = _curMatrix.value.c.filterIndexed { i, value ->
+        val newC = _curMatrix.value.c.filterIndexed { i, _ ->
             i != index
         }
 

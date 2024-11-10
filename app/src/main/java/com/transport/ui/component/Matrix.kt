@@ -88,11 +88,10 @@ fun Matrix(
                 .onGloballyPositioned { layout ->
 
                 val width = layout.size.width
-                val size = a.size
-                val tileQuantity = when (size) {
+                val tileQuantity = when (a.size) {
                         in 0..3 -> 5
                         9 -> 10
-                        else -> size + 2
+                        else -> a.size + 2
                     }
                 val spacing = with(localDensity) { contentSpacing.toPx() }
 
@@ -148,7 +147,7 @@ fun Matrix(
                         c[bIndex].forEachIndexed { cIndex, item ->
                             MatrixTile(
                                 modifier = Modifier.size(tileSize),
-                                textValue = item.toString(),
+                                textValue = item.c.toString(),
                                 defaultValue = "C${(10 * (bIndex + 1) + cIndex + 1).minifyDigits()}"
                             )
                         }

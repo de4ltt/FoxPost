@@ -1,6 +1,6 @@
 package com.transport.ui.util
 
-internal fun Int.minifyDigits(): String {
+fun Int.minifyDigits(): String {
     val subscriptDigits = mapOf(
         0 to "₀",
         1 to "₁",
