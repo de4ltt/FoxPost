@@ -1,4 +1,4 @@
-package com.transport.ui.component
+package com.transport.ui.component.assistance
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState

@@ -1,4 +1,4 @@
-package com.transport.ui.component
+package com.transport.ui.component.main
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +36,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 
 import com.transport.R
+import com.transport.ui.component.assistance.RubikFontBasicText
 
 import com.transport.ui.theme.Cherry
 import com.transport.ui.theme.Dimens
@@ -47,7 +48,8 @@ import com.transport.ui.util.bounceClick
 
 @Composable
 fun InitialDataTile(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = { }
 ) {
 
     var tileHeight by rememberSaveable {
@@ -108,7 +110,9 @@ fun InitialDataTile(
             Row(
                 modifier = Modifier
                     .wrapContentSize()
-                    .bounceClick {}
+                    .bounceClick {
+                        onClick()
+                    }
                     .clip(RoundedCornerShape(Dimens.uniCorners))
                     .background(color = Cherry)
                     .padding(Dimens.enterButtonPadding),

@@ -1,4 +1,4 @@
-package com.transport.ui.component
+package com.transport.ui.component.assistance
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,7 +18,7 @@ fun ScreenScaffoldWithButton(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(Dimens.uniSpacedBy)
+        verticalArrangement = Arrangement.spacedBy(Dimens.uniSpacing)
     ) {
 
         header()

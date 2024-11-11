@@ -1,16 +1,9 @@
-package com.transport.ui.component
+package com.transport.ui.component.assistance
 
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import com.transport.ui.theme.Black
@@ -22,13 +15,9 @@ fun Header(
     title: String
 ) {
 
-    AnimatedContent(
+    Crossfade(
         modifier = modifier.fillMaxWidth(),
         targetState = title,
-        transitionSpec = {
-            (fadeIn() + slideInVertically(tween(200)))
-                .togetherWith(slideOutVertically(tween(200)) + fadeOut(tween(200)))
-        },
         label = ""
     ) {
 

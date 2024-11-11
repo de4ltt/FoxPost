@@ -8,29 +8,22 @@ import androidx.activity.viewModels
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.transport.ui.component.Header
-import com.transport.ui.component.InitialDataTile
-import com.transport.ui.component.Matrix
-import com.transport.ui.component.MethodChoosingButton
-import com.transport.ui.component.ReadyButton
-import com.transport.ui.component.ScreenScaffoldWithButton
+import com.transport.model.event.AppUIEvent
+import com.transport.model.state.ScreenMode
+import com.transport.ui.component.assistance.Header
+import com.transport.ui.component.assistance.ReadyButton
+import com.transport.ui.component.assistance.ScreenScaffoldWithButton
+import com.transport.ui.content.DefaultMainContent
+import com.transport.ui.content.InitialDataContent
+import com.transport.ui.content.SolutionContent
 import com.transport.ui.theme.Dimens
 import com.transport.ui.theme.TransportTheme
 import com.transport.ui.viewmodel.MainViewModel
@@ -41,17 +34,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-/*
-        com.transport.algorithm.display()*/
 
         val mainViewModel: MainViewModel by viewModels()
 
+        val onEvent = mainViewModel::onEvent
+
         setContent {
-
-            var isSwapped by rememberSaveable {
-                mutableStateOf(false)
-            }
-
             TransportTheme {
                 val state by mainViewModel.screenUIState.collectAsStateWithLifecycle()
 
@@ -63,52 +51,65 @@ class MainActivity : ComponentActivity() {
                             .windowInsetsPadding(WindowInsets.displayCutout)
                             .padding(
                                 vertical = Dimens.uniVerticalPadding,
-                                horizontal = Dimens.uniPadding
+                                horizontal = Dimens.uniHorizontalPadding
                             ),
                         header = {
                             Header(title = title)
                         },
                         button = {
                             ReadyButton(
-                                isActive = true,
-                                onClick = { isSwapped = !isSwapped }
+                                isActive = isReady,
+                                onClick = {
+                                    onEvent(
+                                        AppUIEvent.FindSolution
+                                    )
+                                    onEvent(
+                                        AppUIEvent.ChangeScreenMode(
+                                            ScreenMode.SOLUTION
+                                        )
+                                    )
+                                }
                             )
                         },
                         content = {
+
                             SharedTransitionLayout {
-                                AnimatedContent(targetState = isSwapped, label = "Orange Magic") {
-                                    if (!it) {
-                                        Column(
-                                            modifier = Modifier.weight(1f),
-                                            horizontalAlignment = Alignment.CenterHorizontally,
-                                            verticalArrangement = Arrangement.spacedBy(Dimens.uniSpacedBy)
-                                        ) {
-                                            MethodChoosingButton(
-                                                modifier = Modifier
-                                                    .sharedBounds(
-                                                        rememberSharedContentState(key = "orange"),
-                                                        animatedVisibilityScope = this@AnimatedContent,
-                                                        resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(),
-                                                        clipInOverlayDuringTransition = OverlayClip(
-                                                            RoundedCornerShape(50)
-                                                        )
-                                                    )
+                                AnimatedContent(targetState = screenMode, label = "Orange Magic") {
+
+                                    when (it) {
+                                        ScreenMode.DEFAULT -> {
+                                            DefaultMainContent(
+                                                modifier = Modifier.weight(1f),
+                                                onEvent = mainViewModel::onEvent,
+                                                method = state.solutionMode,
+                                                animatedVisibilityScope = this@AnimatedContent,
+                                                sharedTransitionScope = this@SharedTransitionLayout
                                             )
-                                            InitialDataTile()
                                         }
-                                    } else
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Matrix(
+
+                                        ScreenMode.INITIAL_DATA -> {
+                                            InitialDataContent(
+                                                modifier = Modifier.fillMaxSize(),
                                                 mainViewModel = mainViewModel,
                                                 animatedVisibilityScope = this@AnimatedContent,
                                                 sharedTransitionScope = this@SharedTransitionLayout
                                             )
                                         }
 
+                                        ScreenMode.LOADING_SOLUTION -> {
+
+                                        }
+
+                                        ScreenMode.SOLUTION -> {
+                                            SolutionContent(
+                                                modifier = Modifier.fillMaxSize(),
+                                                state = state,
+                                                onEvent = mainViewModel::onEvent,
+                                                animatedVisibilityScope = this@AnimatedContent,
+                                                sharedTransitionScope = this@SharedTransitionLayout
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }

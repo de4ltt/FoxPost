@@ -8,5 +8,6 @@ package com.transport.model
 data class CTile(
     val c: Int? = null,
     val x: Int? = null,
-    val d: Int? = null
+    val d: Int? = null,
+    val check: Pair<Boolean, Boolean> = Pair(false, false)
 )

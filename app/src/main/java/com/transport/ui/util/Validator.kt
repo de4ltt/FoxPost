@@ -5,32 +5,34 @@ import android.widget.Toast
 import com.transport.ui.theme.Strings
 
 object Validator {
-    val onlyDigits: (Context, String, () -> Unit) -> Unit = { context, text, ifTrueAction ->
-        ToastedTriedRequire(
-            context = context,
-            condition = Regex("[0-9]*").matches(text),
-            errorMessage = "Можно ввести только числа",
-            ifTrueAction = ifTrueAction
-        )
-    }
+    val onlyDigitsLessThan1000: (Context, String) -> Boolean
+        get() = { context, text ->
+            context.ToastedTriedRequire(
+                condition = Regex("[0-9]*").matches(text),
+                errorMessage = "Можно ввести только числа"
+            )
+            context.ToastedTriedRequire(
+                condition = text.ifEmpty { "0" }.toInt() < 1000,
+                errorMessage = "Числа не должны быть больше 1000"
+            )
+        }
 
-    private fun ToastedTriedRequire(
-        context: Context,
+    private fun Context.ToastedTriedRequire(
         condition: Boolean,
-        errorMessage: String,
-        ifTrueAction: () -> Unit
-    ) {
+        errorMessage: String
+    ): Boolean {
         try {
             require(condition) {
                 errorMessage
             }
-            ifTrueAction()
+            return true
         } catch (e: Exception) {
             Toast.makeText(
-                context,
+                this,
                 e.message ?: Strings.UNKNOWN_ERROR,
                 Toast.LENGTH_SHORT
             ).show()
+            return false
         }
     }
 }

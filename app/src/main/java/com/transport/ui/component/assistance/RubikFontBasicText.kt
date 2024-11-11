@@ -1,4 +1,4 @@
-package com.transport.ui.component
+package com.transport.ui.component.assistance
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.MarqueeAnimationMode
@@ -10,9 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorProducer
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.TextUnit
 import com.transport.ui.theme.ExtendedTheme
-import com.transport.ui.theme.TextUnits
 
 /**
  * Текст со шрифтом Rubik и basicMarquee
@@ -24,7 +22,6 @@ import com.transport.ui.theme.TextUnits
  *
  * @author Михаил Гонтарев (KiREHwYE)
  */
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RubikFontBasicText(
     text: String,

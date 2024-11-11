@@ -1,7 +1,6 @@
-package com.transport.ui.component
+package com.transport.ui.component.assistance
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.ExperimentalSharedTransitionApi
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,10 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -22,6 +17,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import com.transport.model.event.AppUIEvent
+import com.transport.model.state.SolutionMode
 
 import com.transport.ui.theme.Dimens
 import com.transport.ui.theme.Peach
@@ -29,26 +26,19 @@ import com.transport.ui.theme.Red
 import com.transport.ui.theme.TextUnits
 import com.transport.ui.util.bounceClick
 
-@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun MethodChoosingButton(
+    method: SolutionMode,
+    onEvent: (AppUIEvent) -> Unit,
     modifier: Modifier = Modifier
 ) {
-
-    val labels = listOf(
-        "Метод минимального элемента",
-        "Метод северо-западного угла",
-        "Метод двойного предпочтения"
-    )
-
-    var currentLabelIndex by rememberSaveable {
-        mutableStateOf(0)
-    }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .bounceClick { currentLabelIndex = (currentLabelIndex + 1) % 3 }
+            .bounceClick {
+                onEvent(AppUIEvent.SwitchSolutionMode)
+            }
             .clip(RoundedCornerShape(50))
             .drawBehind {
                 drawRect(
@@ -61,9 +51,9 @@ fun MethodChoosingButton(
         contentAlignment = Alignment.Center
     ) {
 
-        AnimatedContent(targetState = currentLabelIndex, label = "Method") {
+        AnimatedContent(targetState = method.title, label = "Method") {
             RubikFontBasicText(
-                text = labels[it],
+                text = it,
                 style = TextStyle(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = TextUnits.METHOD,
