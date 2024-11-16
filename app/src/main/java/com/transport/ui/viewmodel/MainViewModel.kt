@@ -10,7 +10,9 @@ import com.transport.model.event.AppUIEvent
 import com.transport.model.state.ScreenMode
 import com.transport.model.state.ScreenUIState
 import com.transport.model.state.SolutionMode
+import com.transport.ui.algorythm.PotentialsMethod
 import com.transport.ui.util.matchTitle
+import com.transport.ui.util.plus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
@@ -174,8 +176,13 @@ class MainViewModel : ViewModel() {
         val calculation = _screenUIState.value.solutionMode.func
         val matrix = _curMatrix.value
 
+        val firstMethod = calculation(matrix)
+        val newMatrix = firstMethod.first[firstMethod.first.lastIndex].second
+
+        val secondMethod = PotentialsMethod(newMatrix)
+
         _screenUIState.value = _screenUIState.value.copy(
-            solution = calculation(matrix)
+            solution = firstMethod + secondMethod
         )
     }
 

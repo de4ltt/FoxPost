@@ -54,22 +54,6 @@ fun Matrix(
     sharedTransitionScope: SharedTransitionScope
 ) {
 
-    var _scale by remember { mutableFloatStateOf(1f) }
-    var _offset by remember { mutableStateOf(Offset.Zero) }
-
-    val scale by animateFloatAsState(targetValue = _scale)
-    val offset by animateOffsetAsState(targetValue = _offset)
-
-    val transformableState = rememberTransformableState { scaleChange, offsetChange, _ ->
-        _scale *= scaleChange
-        _offset += offsetChange
-    }
-
-    LaunchedEffect(!transformableState.isTransformInProgress) {
-        _scale = 1f
-        _offset = Offset.Zero
-    }
-
     val state by mainViewModel.curMatrix.collectAsStateWithLifecycle()
     val screenState by mainViewModel.screenUIState.collectAsStateWithLifecycle()
     val onEvent = mainViewModel::onEvent
@@ -89,13 +73,6 @@ fun Matrix(
             modifier = modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .transformable(transformableState)
-                .graphicsLayer(
-                    scaleX = scale,
-                    scaleY = scale,
-                    translationX = offset.x,
-                    translationY = offset.y
-                )
                 .onGloballyPositioned { layout ->
 
                     val width = layout.size.width

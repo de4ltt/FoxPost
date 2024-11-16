@@ -9,6 +9,7 @@ object Dimens {
     val uniPadding = 20.dp
     val uniCorners = 18.dp
     val uniSpacedBy = 16.dp
+    val tileSpacing = 6.dp
 
     val penSize = 15.dp
     val enterButtonPadding = 14.dp

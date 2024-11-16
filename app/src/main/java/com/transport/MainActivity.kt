@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.transport.model.event.AppUIEvent
 import com.transport.model.state.ScreenMode
+import com.transport.ui.algorythm.launchMethod
 import com.transport.ui.component.assistance.Header
 import com.transport.ui.component.assistance.ReadyButton
 import com.transport.ui.component.assistance.ScreenScaffoldWithButton
@@ -34,6 +35,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        launchMethod()
 
         val mainViewModel: MainViewModel by viewModels()
 

@@ -30,6 +30,7 @@ import com.transport.model.Matrix
 import com.transport.ui.component.assistance.RubikFontBasicText
 import com.transport.ui.component.main.CornerTile
 import com.transport.ui.theme.DarkGrey
+import com.transport.ui.theme.Dimens.tileSpacing
 import com.transport.ui.theme.Dimens.uniSpacedBy
 import com.transport.ui.theme.Dimens.uniSpacing
 import com.transport.ui.theme.Red
@@ -41,24 +42,6 @@ fun DisplayMatrix(
     description: String,
     matrix: Matrix
 ) {
-
-    var _scale by remember { mutableFloatStateOf(1f) }
-    var _offset by remember { mutableStateOf(Offset.Zero) }
-
-    val scale by animateFloatAsState(targetValue = _scale)
-    val offset by animateOffsetAsState(targetValue = _offset)
-
-    val contentSpacing = 5.dp
-
-    val transformableState = rememberTransformableState { scaleChange, offsetChange, _ ->
-        _scale *= scaleChange
-        _offset += offsetChange
-    }
-
-    LaunchedEffect(!transformableState.isTransformInProgress) {
-        _scale = 1f
-        _offset = Offset.Zero
-    }
 
     matrix.apply {
 
@@ -81,22 +64,15 @@ fun DisplayMatrix(
             Box(
                 modifier = modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
-                    .transformable(transformableState)
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y
-                    ),
+                    .wrapContentHeight(),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(contentSpacing)
+                    verticalArrangement = Arrangement.spacedBy(tileSpacing)
                 ) {
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(contentSpacing)
+                        horizontalArrangement = Arrangement.spacedBy(tileSpacing)
                     ) {
                         CornerTile(
                             modifier = Modifier.size(tileSize)
@@ -112,7 +88,7 @@ fun DisplayMatrix(
 
                     a.forEachIndexed { aIndex, aValue ->
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(contentSpacing)
+                            horizontalArrangement = Arrangement.spacedBy(tileSpacing)
                         ) {
                             ABDisplayTile(
                                 modifier = Modifier.size(tileSize),

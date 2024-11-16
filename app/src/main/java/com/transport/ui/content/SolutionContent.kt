@@ -37,7 +37,8 @@ fun SolutionContent(
 ) {
 
     val solutions = state.solution?.first ?: emptyList()
-    val result = state.solution?.second ?: 0
+    val result1 = state.solution?.second?.first
+    val result2 = state.solution?.second?.second
 
     LazyColumn(
         modifier = modifier,
@@ -89,7 +90,20 @@ fun SolutionContent(
 
         item {
             RubikFontBasicText(
-                text = "Таким образом, f = $result",
+                text = "Таким образом, для метода построения исходного опорного решения f = $result1",
+                basicMarqueeEnabled = false,
+                style = TextStyle(
+                    color = DarkGrey,
+                    fontSize = TextUnits.READY,
+                    fontWeight = FontWeight.Light,
+                    fontStyle = FontStyle.Italic
+                )
+            )
+        }
+
+        item {
+            RubikFontBasicText(
+                text = "А для метода потенциалов f = $result2",
                 basicMarqueeEnabled = false,
                 style = TextStyle(
                     color = DarkGrey,

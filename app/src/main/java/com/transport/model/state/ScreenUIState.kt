@@ -1,8 +1,8 @@
 package com.transport.model.state
 
+import com.transport.algorithm.calculateSolutionDoublePreferenceMethod
 import com.transport.algorithm.calculateSolutionMinimalElementMethod
 import com.transport.model.Matrix
-import com.transport.ui.algorythm.calculateSolutionDoublePreferenceMethod
 import com.transport.ui.theme.Strings
 
 enum class ScreenMode {
@@ -30,5 +30,5 @@ data class ScreenUIState(
     val screenMode: ScreenMode = ScreenMode.DEFAULT,
 
     val solutionMode: SolutionMode = SolutionMode.NW_ANGLE,
-    val solution: Pair<List<Pair<String, Matrix>>, Int>? = null
+    val solution: Pair<List<Pair<String, Matrix>>, Pair<Int, Int>>? = null
 )
