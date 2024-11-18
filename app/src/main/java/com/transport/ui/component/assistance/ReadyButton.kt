@@ -42,6 +42,7 @@ fun ReadyButton(
     isActive: Boolean = false,
     isVisible: Boolean = true,
     onClick: () -> Unit = { },
+    backTap: () -> Unit = {}
 ) {
 
     val colors = listOf(
@@ -74,7 +75,10 @@ fun ReadyButton(
                     .fillMaxWidth()
                     .bounceClick(
                         enabled = isActive,
-                        onClick = { onClick() }
+                        onClick = {
+                            onClick()
+                            backTap()
+                        }
                     )
                     .clip(RoundedCornerShape(Dimens.uniCorners))
                     .drawBehind {

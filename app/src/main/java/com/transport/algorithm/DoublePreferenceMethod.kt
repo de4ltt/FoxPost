@@ -6,7 +6,7 @@ import kotlin.math.min
 
 fun calculateSolutionDoublePreferenceMethod(
     matrix: Matrix
-): Pair<List<Pair<String, Matrix>>, Int> {
+): List<Pair<String, Matrix?>> {
 
     val solutionSteps: MutableList<Pair<String, Matrix>> = mutableListOf()
 
@@ -269,7 +269,7 @@ fun calculateSolutionDoublePreferenceMethod(
         }
     }
 
-    return Pair(solutionSteps, sum)
+    return solutionSteps
 }
 
 

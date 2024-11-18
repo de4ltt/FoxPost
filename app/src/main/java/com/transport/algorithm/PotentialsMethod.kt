@@ -1,60 +1,8 @@
-
-package com.transport.ui.algorythm
+package com.transport.algorithm
 
 import android.util.Log
-import com.transport.model.CTile
 import com.transport.model.Matrix
 import kotlin.math.min
-
-val matrix = Matrix(
-    a = listOf(4, 6, 10, 10),
-    b = listOf(7, 7, 7, 7, 2),
-    c = listOf(
-        listOf(
-            CTile(x = 3, c = 16),
-            CTile(x = 0, c = 30),
-            CTile(x = 1, c = 17),
-            CTile(x = 0, c = 10),
-            CTile(x = 0, c = 16)
-        ),
-        listOf(
-            CTile(x = 0, c = 30),
-            CTile(x = 0, c = 27),
-            CTile(x = 6, c = 26),
-            CTile(x = 0, c = 9),
-            CTile(x = 0, c = 23)
-        ),
-        listOf(
-            CTile(x = 1, c = 13),
-            CTile(x = 0, c = 4),
-            CTile(x = 0, c = 22),
-            CTile(x = 7, c = 3),
-            CTile(x = 2, c = 1)
-        ),
-        listOf(
-            CTile(x = 3, c = 3),
-            CTile(x = 7, c = 1),
-            CTile(x = 0, c = 5),
-            CTile(x = 0, c = 4),
-            CTile(x = 0, c = 24)
-        )
-    )
-)
-
-fun Matrix.printC(): String = this.c.joinToString(separator = "\n") { row ->
-    row.joinToString(" ")
-}
-
-fun launchMethod() {
-
-    Log.d("KARAMBA", "launched")
-
-    val x = PotentialsMethod(matrix)
-
-    x.first.forEach {
-        Log.d("MATRICE", it.second.printC())
-    }
-}
 
 private data class Element(
     val value: Int = Int.MAX_VALUE,
@@ -62,19 +10,19 @@ private data class Element(
     val indexB: Int = Int.MAX_VALUE
 )
 
-private class TreeNode(val value: Element = Element()) {
+private data class TreeNode(var value: Element = Element()) {
     var previousNode: TreeNode? = null
-    val nodes: MutableList<TreeNode> = mutableListOf()
+    val children: MutableList<TreeNode> = mutableListOf()
 
-    fun add(node: TreeNode) = nodes.add(node)
+    fun born(node: TreeNode) = children.add(node)
     fun addAncestor(node: TreeNode) {
         previousNode = node
     }
 }
 
-fun PotentialsMethod(
+fun calculateSolutionPotentialsMethod(
     matrix: Matrix
-): Pair<List<Pair<String, Matrix>>, Int> {
+): List<Pair<String, Matrix?>> {
 
     var description: String
     val solutionSteps: MutableList<Pair<String, Matrix>> = mutableListOf()
@@ -84,175 +32,208 @@ fun PotentialsMethod(
     description = "Начальная матрица"
     solutionSteps.add(Pair(description, resMatrix))
 
+    Log.d("FIRST_DEATH", "UV BEFORE")
+
     description = "Найдем U и V"
-    var uAndV = findUAndV(matrix)
+    var uAndV = findUAndV(resMatrix)
+
+    Log.d("FIRST_DEATH", "UV PASSED")
 
     resMatrix = resMatrix.copy(u = uAndV.first, v = uAndV.second)
 
-    solutionSteps.add(Pair(description, matrix))
+    solutionSteps.add(Pair(description, resMatrix))
 
     description = "Найдем оценки для свободных клеток"
     resMatrix = evaluateEvaluationsForFreeCells(resMatrix)
 
+    Log.d("FIRST_DEATH", "EVALUATIONS PASSED")
+
+    solutionSteps.add(Pair(description, resMatrix))
+
     var lowestEvaluatedCell = findLowestEvaluatedCell(resMatrix)
-    Log.d("BLACK_MAMBA", "LOWEST FUCKING ELEMENT: $lowestEvaluatedCell")
+
+    Log.d("FIRST_DEATH", "LOWEST PASSED")
+
+    var root = TreeNode(lowestEvaluatedCell)
+
+    val path = mutableListOf(listOf<TreeNode>())
 
     while (lowestEvaluatedCell.value < 0) {
 
-        val root = TreeNode(lowestEvaluatedCell)
-        root.addAncestor(root)
+        Log.d("ALL", "LOWEST ===== ${lowestEvaluatedCell}")
 
-        val path: MutableList<Element> = mutableListOf()
+        fun findAllChildren(node: TreeNode, visited: MutableSet<Element> = mutableSetOf()) {
 
-        fun findAllConnectedNodes(node: TreeNode) {
-            resMatrix.c[node.value.indexA].forEachIndexed { indexB, cTile ->
-                cTile.evaluation?.let {
-                    if (cTile.evaluation != 0)
-                        node.add(TreeNode(
-                            Element(
-                                value = cTile.evaluation,
-                                indexA = node.value.indexA,
-                                indexB = indexB
-                            )
-                                .also {
-                                    if (it == root.value) { // Проверяем сначала отличные от этого, если не нашлось =, то этот
-                                        path.add(node.value)
+            if (node.value != root.value)
+                visited.add(node.value)
 
-                                        var previousNode = node.previousNode
-                                        previousNode?.let { pNode ->
-                                            while (previousNode != root) {
-                                                path.add(pNode.value)
-                                                previousNode = pNode.previousNode
-                                            }
-                                        }
-                                        return
-                                    }
-                                }
-                        ).also { it.addAncestor(TreeNode(node.value)) })
-                }
-            }
+            resMatrix.c.forEachIndexed { indexA, row ->
+                row.forEachIndexed { indexB, cTile ->
 
-            for (i in 0 until resMatrix.a.size) {
-                resMatrix.c[i][node.value.indexB].run {
-                    this.evaluation?.let {
-                        if (this.evaluation != 0)
-                            node.add(TreeNode(
-                                Element(
-                                    value = this.evaluation,
-                                    indexA = i,
-                                    indexB = node.value.indexB
-                                )
-                                    .also {
-                                        if (it == root.value) {
-                                            path.add(node.value)
+                    val isElementOnTheSameCrossAndNotEqual = (indexA == node.value.indexA || indexB == node.value.indexB)
+                            && !(indexA == node.value.indexA && indexB == node.value.indexB)
 
-                                            var previousNode = node.previousNode
+                    if (isElementOnTheSameCrossAndNotEqual) {
 
-                                            previousNode?.let { pNode ->
-                                                while (pNode != root) {
-                                                    path.add(pNode.value)
-                                                    previousNode = pNode.previousNode
-                                                }
-                                            }
+                        val newElement = Element(
+                            value = cTile.evaluation,
+                            indexA = indexA,
+                            indexB = indexB
+                        )
 
+                        if (newElement !in visited) {
+                            val newNode = TreeNode(newElement)
 
-                                            return
-                                        }
-                                    }
-                            ).also { it.addAncestor(TreeNode(node.value)) })
+                            if (cTile.x != 0 || newElement == root.value) {
+                                newNode.addAncestor(node)
+                                node.born(newNode)
+                            }
+                        }
                     }
                 }
             }
 
-            root.nodes.forEach { _node ->
-                findAllConnectedNodes(_node)
+            var flag = false
+            node.children.forEach { _node ->
+                if (_node.value == root.value) {
+
+                    _node.addAncestor(node)
+
+                    val cycle = makePath(node)
+
+                    fun checkList(): Boolean {
+                        val indexesASet = cycle.map { it.value.indexA }.toSet()
+                        val indexesBSet = cycle.map { it.value.indexB }.toSet()
+
+                        var evenInRow = true
+                        indexesASet.forEach { aSet ->
+                            val li = cycle.filter { aSet == it.value.indexA }
+                            evenInRow = evenInRow && li.size % 2 == 0
+                        }
+
+                        var evenInColumn = true
+                        indexesBSet.forEach { bSet ->
+                            val li = cycle.filter { bSet == it.value.indexB }
+                            evenInColumn = evenInColumn && li.size % 2 == 0
+                        }
+
+                        return evenInRow && evenInColumn
+                    }
+
+                    if (cycle.count { it.value == root.value } == 1 && checkList() && cycle.isNotEmpty())
+                        path.add(cycle)
+
+                    flag = true
+                }
             }
+
+            node.children.forEach { _node ->
+                if (_node.value !in visited) {
+                    findAllChildren(_node, visited.toMutableSet())
+                }
+            }
+
+            if (flag)
+                return
         }
 
-        findAllConnectedNodes(root)
+        findAllChildren(root)
 
-        var alternatingSign = -1
+        var minX = Int.MAX_VALUE
 
-        var teta = Int.MAX_VALUE
 
-        Log.d("KARAMBA", "${path.size}}")
+        Log.d("PATHS", path[0].joinToString("\n"))
 
-        path.forEach { element ->
-            resMatrix = resMatrix.copy(
-                c = resMatrix.c.mapIndexed { indexAmap, row ->
-                    row.mapIndexed { indexBmap, cTile ->
-                        if (indexAmap == element.indexA && indexBmap == element.indexB)
-                            cTile.copy(res = alternatingSign)
-                                .also {
-                                    if (alternatingSign < 0)
-                                        cTile.x?.let { x ->
-                                            teta = min(x, teta)
-                                        }
 
-                                }
-                        else cTile
-                    }
-                }
-            )
-            alternatingSign *= -1
+        path[0].dropLast(1).forEach { node ->
+            minX = min(resMatrix.c[node.value.indexA][node.value.indexB].x ?: 0, minX)
         }
 
-        description =
-            "Находим клетку с минимальной оценкой, строим цикл с началом в этой клетке, помечая чередуя \"-\" и \"+\" каждую клетку. Среди клеток, отмеченных знаком минус находим ту, что имеет минимальное значение X."
-        solutionSteps.add(Pair(description, resMatrix))
+        var alt = -1
 
-        Log.d("ROOT", "112312 ${path.joinToString("\n")}")
+        path[0].reversed().forEach { node ->
 
-        path.forEach { element ->
             resMatrix = resMatrix.copy(
-                c = resMatrix.c.mapIndexed { indexAmap, row ->
-                    row.mapIndexed { indexBmap, cTile ->
-                        if (indexAmap == element.indexA && indexBmap == element.indexB)
-                            cTile.x?.let { x ->
-                                Log.d("PATH_NULL", "$x ${cTile.res} $teta $alternatingSign")
-                                cTile.copy(x = x + (cTile.res ?: 0) * teta, d = teta * alternatingSign)
-                            } ?: cTile
-                        else cTile
-                    }
+                c = resMatrix.c.mapIndexed { indexA, row ->
+                    if (node.value.indexA == indexA)
+                        row.mapIndexed { indexB, cTile ->
+                            if (node.value.indexB == indexB) {
+                                alt *= -1
+                                cTile.copy(d = alt * minX, evaluation = 0)
+                            }
+                            else cTile
+                        }
+                    else row
                 }
             )
         }
 
-        description =
-            "Перерасчитываем перевозки в клетках на величину найденного минимального значения, учитывая знак \"-\" и \"+\""
-        solutionSteps.add(Pair(description, resMatrix))
+        path[0].reversed().forEach { node ->
+            resMatrix = resMatrix.copy(
+                c = resMatrix.c.mapIndexed { indexA, row ->
+                    row.mapIndexed { indexB, cTile ->
+                        cTile.x?.let { x ->
+                            if (indexA == node.value.indexA && indexB == node.value.indexB)
+                                cTile.copy(x = x + (cTile.d ?: 0))
+                            else cTile
+                        } ?: cTile
+                    }
+                }
+            )
+        }
 
-        uAndV = findUAndV(matrix)
+
+        resMatrix = resMatrix.copy(
+            c = resMatrix.c.mapIndexed { indexA, row ->
+                    row.mapIndexed { indexB, cTile ->
+                        cTile.copy(d = 0, evaluation = 0)
+                    }
+            }
+        )
+
+
+        Log.d("FIND", "UV STARTED")
+        description = "Найдем U и V"
+        uAndV = findUAndV(resMatrix)
+        Log.d("FIND", "UV ENDED")
 
         resMatrix = resMatrix.copy(u = uAndV.first, v = uAndV.second)
 
-        description = "Найдем оценки для свободных клеток"
-        resMatrix = resMatrix.copy(
-            c = evaluateEvaluationsForFreeCells(resMatrix).c
-        )
+        solutionSteps.add(Pair(description, resMatrix))
 
-        Log.d("KARAMBA", "$uAndV\n${resMatrix.printC()}")
+        description = "Найдем оценки для свободных клеток"
+        resMatrix = evaluateEvaluationsForFreeCells(resMatrix)
+
         solutionSteps.add(Pair(description, resMatrix))
 
         lowestEvaluatedCell = findLowestEvaluatedCell(resMatrix)
-        Log.d("KARAMBA", "$lowestEvaluatedCell")
+
+        root = TreeNode(lowestEvaluatedCell)
+
+        path.clear()
     }
 
-    Log.d("KARAMBA", "1")
+    description = "Общая стоимость перевозок по этому плану:"
 
-    var sum = 0
+    solutionSteps.add(Pair(description, resMatrix))
 
-    resMatrix.c.forEach { row ->
-        row.forEach { cTile ->
-            cTile.x?.let { x ->
-                cTile.c?.let { c ->
-                    sum += x * c
-                }
-            }
-        }
+    return solutionSteps
+}
+
+private fun makePath(node: TreeNode): List<TreeNode> {
+
+    val path = mutableListOf<TreeNode>()
+    path.add(node)
+
+    var previousNode = node.previousNode
+
+    while (previousNode != null) {
+        path.add(previousNode)
+
+        previousNode = previousNode.previousNode
     }
 
-    return Pair(solutionSteps, sum)
+    return path
 }
 
 private fun findLowestEvaluatedCell(
@@ -279,27 +260,15 @@ private fun evaluateEvaluationsForFreeCells(
 
     var innerMatrix = matrix
 
-    innerMatrix.u.forEachIndexed { indexU, u ->
-        innerMatrix.v.forEachIndexed { indexV, v ->
-
-            if (innerMatrix.c[indexU][indexV].x == 0 || innerMatrix.c[indexU][indexV].x == null)
-                innerMatrix = innerMatrix.copy(
-                    c = innerMatrix.c.mapIndexed { indexAmap, row ->
-                        row.mapIndexed { indexBmap, cTile ->
-                            if (indexAmap == indexU && indexBmap == indexV)
-                                cTile.copy(evaluation = (cTile.c ?: 0) - (u ?: 0) - (v ?: 0))
-                                    .also {
-                                        Log.d(
-                                            "BLACK_MAMBA",
-                                            "x = ${innerMatrix.c[indexU][indexV].x}\nc = ${innerMatrix.c[indexU][indexV].c}, u = $u, v = $v\nindexA = $indexU, indexB = $indexV\nevaluation = ${(cTile.c ?: 0) - (u ?: 0) - (v ?: 0)}"
-                                        )
-                                    }
-                            else cTile
-                        }
-                    }
-                )
+    innerMatrix = innerMatrix.copy(
+        c = innerMatrix.c.mapIndexed { indexAmap, row ->
+            row.mapIndexed { indexBmap, cTile ->
+                if ((cTile.x ?: 0) == 0)
+                    cTile.copy(evaluation = (cTile.c ?: 0) - (matrix.u[indexAmap] ?: 0) - (matrix.v[indexBmap] ?: 0))
+                else cTile
+            }
         }
-    }
+    )
 
     return innerMatrix
 }
@@ -324,8 +293,10 @@ private fun findUAndV(
                     if (x != 0) {
                         if (isFirstIteration) {
 
-                            v[j] = c
-                            u[i] = 0
+                            v[j] = 0
+                            u[i] = c
+
+                            isFirstIteration = false
                         } else {
                             u[i]?.let { u ->
                                 v[j] = c - u
@@ -341,31 +312,45 @@ private fun findUAndV(
                 }
             }
         }
-        isFirstIteration = false
     }
+
+    Log.d("UV", "U ===== ${u.joinToString(" ")} V ===== ${v.joinToString(" ")}")
+
+    Log.d("FIRST_DEATH", "FOR FOR PASSED")
 
     while (unfounded.isNotEmpty()) {
 
-        unfounded.forEach { pair ->
+        val iterator = unfounded.iterator()
 
+        Log.d("FIRST_DEATH", "OUTER_WHILE")
+
+        while (iterator.hasNext()) {
+            Log.d("FIRST_DEATH", "ITERATOR STARTED")
+            val pair = iterator.next()
+            Log.d("FIRST_DEATH", "ITERATOR ENDED")
             val i = pair.first
             val j = pair.second
 
             matrix.c[i][j].c?.let { c ->
-
                 u[i]?.let { u ->
                     v[j] = c - u
-                }
+                } ?: 0
                 v[j]?.let { v ->
                     u[i] = c - v
+                } ?: 0
+                Log.d("PAIR", "PAAAAAAAAAAAIR $pair Ui ${u[i]} Vj ${v[j]}")
+                if (u[i] != null && v[j] != null) {
+                    Log.d("FIRST_DEATH", "REMOVE STARTED $pair")
+                    iterator.remove()
+                    Log.d("FIRST_DEATH", "REMOVE ENDED")
                 }
-
-                if (u[i] != null && v[j] != null)
-                    unfounded.remove(Pair(i, j))
             }
-
         }
     }
+
+    Log.d("FIRST_DEATH", "UV PASSED")
+
+    Log.d("ALL", "${Pair(u, v)}")
 
     return Pair(u, v)
 }

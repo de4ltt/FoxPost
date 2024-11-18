@@ -5,7 +5,7 @@ import com.transport.model.Matrix
 
 fun calculateSolutionMinimalElementMethod(
     initialMatrix: Matrix
-): Pair<List<Pair<String, Matrix>>, Int> {
+): List<Pair<String, Matrix?>> {
 
     var matrix = initialMatrix
     val solutions = mutableListOf<Pair<String, Matrix>>()
@@ -71,5 +71,5 @@ fun calculateSolutionMinimalElementMethod(
     }
 
     val result = matrix.c.sumOf { row -> row.sumOf { tile -> (tile.c ?: 0) * (tile.x ?: 0) } }
-    return Pair(solutions, result)
+    return solutions
 }

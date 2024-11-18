@@ -2,23 +2,21 @@ package com.transport.model.state
 
 import com.transport.algorithm.calculateSolutionDoublePreferenceMethod
 import com.transport.algorithm.calculateSolutionMinimalElementMethod
+import com.transport.algorithm.calculateSolutionNorthWestAngleMethod
 import com.transport.model.Matrix
 import com.transport.ui.theme.Strings
 
 enum class ScreenMode {
     DEFAULT,
     INITIAL_DATA,
-    LOADING_SOLUTION,
     SOLUTION
 }
 
 enum class SolutionMode(
     val title: String,
-    val func: (Matrix) -> Pair<List<Pair<String, Matrix>>, Int> = {
-        calculateSolutionMinimalElementMethod(it)
-    }
+    val func: (Matrix) -> List<Pair<String, Matrix?>>
 ) {
-    NW_ANGLE(Strings.NW_ANGLE),
+    NW_ANGLE(Strings.NW_ANGLE, { calculateSolutionNorthWestAngleMethod(it)}),
     MIN_ELEMENT(Strings.MIN_ELEMENT, { calculateSolutionMinimalElementMethod(it) }),
     DOUBLE_PREFERENCE(Strings.DOUBLE_PREFERENCE, { calculateSolutionDoublePreferenceMethod(it) })
 }
@@ -30,5 +28,5 @@ data class ScreenUIState(
     val screenMode: ScreenMode = ScreenMode.DEFAULT,
 
     val solutionMode: SolutionMode = SolutionMode.NW_ANGLE,
-    val solution: Pair<List<Pair<String, Matrix>>, Pair<Int, Int>>? = null
+    val solution: List<Pair<String, Matrix?>> = emptyList()
 )

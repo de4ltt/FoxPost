@@ -23,4 +23,5 @@ sealed class AppUIEvent {
 
     data object SwitchSolutionMode: AppUIEvent()
     data object FindSolution: AppUIEvent()
+    data object IdleSolution: AppUIEvent()
 }

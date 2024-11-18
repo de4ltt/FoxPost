@@ -4,7 +4,10 @@ import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -27,34 +30,38 @@ fun DefaultMainContent(
 ) {
 
     with (sharedTransitionScope) {
-        Column(
+        Box(
             modifier = modifier,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(Dimens.uniSpacing)
+            contentAlignment = Alignment.Center
         ) {
-            MethodChoosingButton(
-                modifier = Modifier
-                    .sharedBounds(
-                        rememberSharedContentState(key = "orange"),
-                        animatedVisibilityScope = animatedVisibilityScope,
-                        resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(),
-                        clipInOverlayDuringTransition = OverlayClip(
-                            RoundedCornerShape(50)
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(Dimens.uniSpacing)
+            ) {
+                MethodChoosingButton(
+                    modifier = Modifier
+                        .sharedBounds(
+                            rememberSharedContentState(key = "orange"),
+                            animatedVisibilityScope = animatedVisibilityScope,
+                            resizeMode = SharedTransitionScope.ResizeMode.ScaleToBounds(),
+                            clipInOverlayDuringTransition = OverlayClip(
+                                RoundedCornerShape(50)
+                            )
+                        ),
+                    method = method,
+                    onEvent = onEvent
+                )
+                InitialDataTile(
+                    onClick = {
+                        onEvent(
+                            AppUIEvent.ChangeScreenMode(
+                                ScreenMode.INITIAL_DATA
+                            )
                         )
-                    ),
-                method = method,
-                onEvent = onEvent
-            )
-            InitialDataTile(
-                onClick = {
-                    onEvent(
-                        AppUIEvent.ChangeScreenMode(
-                            ScreenMode.INITIAL_DATA
-                        )
-                    )
-                }
-            )
+                    }
+                )
+            }
         }
     }
-
 }

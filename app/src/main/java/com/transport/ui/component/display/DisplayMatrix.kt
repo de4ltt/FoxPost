@@ -40,26 +40,26 @@ import com.transport.ui.theme.TextUnits
 fun DisplayMatrix(
     modifier: Modifier = Modifier,
     description: String,
-    matrix: Matrix
+    matrix: Matrix?
 ) {
 
-    matrix.apply {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(uniSpacedBy)
+    ) {
 
-        Column(
-            modifier = modifier,
-            verticalArrangement = Arrangement.spacedBy(uniSpacedBy)
-        ) {
-
-            RubikFontBasicText(
-                text = description,
-                basicMarqueeEnabled = false,
-                style = TextStyle(
-                    color = DarkGrey,
-                    fontSize = TextUnits.READY,
-                    fontWeight = FontWeight.Light,
-                    fontStyle = FontStyle.Italic
-                )
+        RubikFontBasicText(
+            text = description,
+            basicMarqueeEnabled = false,
+            style = TextStyle(
+                color = DarkGrey,
+                fontSize = TextUnits.READY,
+                fontWeight = FontWeight.Light,
+                fontStyle = FontStyle.Italic
             )
+        )
+
+        matrix?.let {
 
             Box(
                 modifier = modifier
@@ -75,29 +75,29 @@ fun DisplayMatrix(
                         horizontalArrangement = Arrangement.spacedBy(tileSpacing)
                     ) {
                         CornerTile(
-                            modifier = Modifier.size(tileSize)
+                            modifier = Modifier.size(it.tileSize)
                         )
 
-                        b.forEach { bValue ->
+                        it.b.forEach { bValue ->
                             ABDisplayTile(
-                                modifier = Modifier.size(tileSize),
+                                modifier = Modifier.size(it.tileSize),
                                 textValue = bValue.toString(),
                             )
                         }
                     }
 
-                    a.forEachIndexed { aIndex, aValue ->
+                    it.a.forEachIndexed { aIndex, aValue ->
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(tileSpacing)
                         ) {
                             ABDisplayTile(
-                                modifier = Modifier.size(tileSize),
+                                modifier = Modifier.size(it.tileSize),
                                 textValue = aValue.toString(),
                             )
 
-                            c[aIndex].forEachIndexed { cIndex, item ->
+                            it.c[aIndex].forEachIndexed { cIndex, item ->
                                 DisplayMatrixTile(
-                                    modifier = Modifier.size(tileSize),
+                                    modifier = Modifier.size(it.tileSize),
                                     highlight = if (item.d != 0 && item.d != null) Red else null,
                                     distance = cIndex + aIndex,
                                     c = item.c ?: 0,
