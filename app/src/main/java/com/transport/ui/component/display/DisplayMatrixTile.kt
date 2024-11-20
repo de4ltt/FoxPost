@@ -37,9 +37,10 @@ fun DisplayMatrixTile(
     modifier: Modifier = Modifier,
     highlight: Color? = null,
     distance: Int,
+    eval: Int,
     c: Int,
     x: Int,
-    d: Int,
+    d: Int?,
     check: Pair<Boolean, Boolean>?
 ) {
 
@@ -47,26 +48,9 @@ fun DisplayMatrixTile(
     val textColor = if (highlight != null) White else Grey
     val xColor = if (highlight != null) White else Black
 
-    var isComposed by remember {
-        mutableStateOf(false)
-    }
-
-    val scale by animateFloatAsState(
-        targetValue = if (isComposed) 1f else 0f,
-        animationSpec = tween(200 + distance * 100)
-    )
-
-    LaunchedEffect(Unit) {
-        isComposed = true
-    }
-
     Row(
         modifier = modifier
             .clip(tileShape)
-            .graphicsLayer(
-                scaleX = scale,
-                scaleY = scale
-            )
             .background(tileColor)
             .background(tileColor),
         verticalAlignment = Alignment.CenterVertically
@@ -79,13 +63,24 @@ fun DisplayMatrixTile(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            check?.let {
+            if (check != null) {
                 Checks(
                     modifier = Modifier.weight(1f),
                     color = { xColor },
-                    check = it
+                    check = check
                 )
             }
+
+            if (eval < 0)
+                RubikFontBasicText(
+                    text = "$eval",
+                    style = TextStyle(
+                        color = textColor,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        textAlign = TextAlign.Center
+                    )
+                )
 
             RubikFontBasicText(
                 modifier = Modifier.weight(1f),
@@ -116,15 +111,17 @@ fun DisplayMatrixTile(
                 )
             )
 
-            RubikFontBasicText(
-                text = if (d > 0) "+$d" else "$d",
-                style = TextStyle(
-                    color = textColor,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = MaterialTheme.typography.bodySmall.fontSize,
-                    textAlign = TextAlign.Center
+            d?.let {
+                RubikFontBasicText(
+                    text = if (it > 0) "+$d" else "$d",
+                    style = TextStyle(
+                        color = textColor,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = MaterialTheme.typography.bodySmall.fontSize,
+                        textAlign = TextAlign.Center
+                    )
                 )
-            )
+            }
         }
     }
 }

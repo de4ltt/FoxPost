@@ -5,8 +5,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.transport.algorithm.calculateSolutionPotentialsMethod
-import com.transport.algorithm.checkValidity
-import com.transport.algorithm.equalized
+import com.transport.algorithm.util.equalized
+import com.transport.algorithm.util.isValid
+import com.transport.algorithm.util.withNullX
 import com.transport.model.CTile
 import com.transport.model.Matrix
 import com.transport.model.event.AppUIEvent
@@ -24,7 +25,7 @@ import kotlinx.coroutines.launch
 typealias Solution = List<Pair<String, Matrix?>>
 
 class MainViewModel(
-    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Main
+    private val coroutineDispatcher: CoroutineDispatcher = Dispatchers.Default
 ) : ViewModel() {
 
     private val _curMatrix: MutableStateFlow<Matrix> = MutableStateFlow(Matrix())
@@ -168,6 +169,7 @@ class MainViewModel(
     private fun changeScreenMode(mode: ScreenMode) = viewModelScope.launch(coroutineDispatcher) {
         _screenUIState.value = _screenUIState.value.copy(
             screenMode = mode,
+            solution = if (mode == ScreenMode.INITIAL_DATA) emptyList() else _screenUIState.value.solution,
             title = matchTitle(mode)
         )
     }
@@ -185,24 +187,26 @@ class MainViewModel(
 
         val firstMethod = calculation(matrix ?: Matrix())
 
+        _solution.value = firstMethod
+
         Log.d("CHECK", firstMethod.joinToString("\n") { it.second?.c?.joinToString("\n") { el -> el.joinToString(" ")} ?: "EMPTY AHAHAHAHHAHAAH!!!!"})
 
-        matrix = firstMethod.last().second
+        matrix = firstMethod.findLast { it.second != null }?.second.withNullX
 
-        if (!matrix.checkValidity()) {
+        if (matrix !=null && matrix.isValid) {
+            val secondMethod = calculateSolutionPotentialsMethod(matrix)
+
+            _solution.value = _solution.value.plus(secondMethod)
+        } else {
+
             val description = "Недостаточно уравнений для поиска значений U и V"
             val errorStep = Pair(description, matrix)
 
             val solutionSteps = _solution.value.toMutableList()
             _solution.value = solutionSteps.plus(errorStep)
-
-
-        } else {
-            val secondMethod = calculateSolutionPotentialsMethod(matrix!!)
-
-            _solution.value = firstMethod.plus(secondMethod)
         }
     }
+
 
     private fun switchSolutionMode() = viewModelScope.launch(coroutineDispatcher) {
         _screenUIState.value = _screenUIState.value.copy(
@@ -219,14 +223,6 @@ class MainViewModel(
     init {
 
         viewModelScope.let {
-
-            it.launch(coroutineDispatcher) {
-                _solution.collect { sol ->
-
-                    Log.d("CCCCC", "${sol}")
-
-                }
-            }
 
             it.launch(coroutineDispatcher) {
                 _solution.collect { sol ->

@@ -45,12 +45,6 @@ fun SolutionContent(
 
     val solutions by state.collectAsStateWithLifecycle()
 
-    Log.d(
-        "EEEEE",
-        solutions.joinToString("\n") { it.second?.c?.joinToString("\n") { el -> el.joinToString(" ")} ?: "EMPTY AHAHAHAHHAHAAH!!!!"}
-    )
-
-
     emptinessChanger(false)
 
     LazyColumn(
@@ -59,7 +53,7 @@ fun SolutionContent(
         contentPadding = PaddingValues(vertical = Dimens.uniPadding)
     ) {
 
-        if (solutions == emptyList<List<Pair<String, Matrix>>>())
+/*        if (solutions == emptyList<List<Pair<String, Matrix>>>())
             item {
                 RubikFontBasicText(
                     basicMarqueeEnabled = false,
@@ -70,7 +64,7 @@ fun SolutionContent(
                         color = Black,
                     )
                 )
-            }
+            }*/
 
         itemsIndexed(solutions) { index, item ->
 
@@ -81,7 +75,7 @@ fun SolutionContent(
                 verticalArrangement = Arrangement.spacedBy(uniSpacing)
             ) {
 
-                if (index != 0)
+                if (index != 0 && item.second != null)
                     RubikFontBasicText(
                         text = Strings.STEP + "$index",
                         basicMarqueeEnabled = false,

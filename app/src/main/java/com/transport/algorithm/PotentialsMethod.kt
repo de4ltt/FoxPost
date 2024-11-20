@@ -1,7 +1,12 @@
 package com.transport.algorithm
 
-import android.util.Log
+import com.transport.algorithm.util.absolutelyMagicalBasis
+import com.transport.algorithm.util.correctBasis
+import com.transport.algorithm.util.isValid
+import com.transport.model.CTile
 import com.transport.model.Matrix
+import com.transport.model.matrix
+import com.transport.ui.util.minifyDigits
 import kotlin.math.min
 
 private data class Element(
@@ -25,19 +30,26 @@ fun calculateSolutionPotentialsMethod(
 ): List<Pair<String, Matrix?>> {
 
     var description: String
-    val solutionSteps: MutableList<Pair<String, Matrix>> = mutableListOf()
+    val solutionSteps: MutableList<Pair<String, Matrix?>> = mutableListOf()
 
     var resMatrix = matrix
+
+    description = """
+        Метод основан на расчёте потенциалов для строк и столбцов таблицы и оценки допустимых перемещений.
+
+        1. Вычисляют потенциалы для строк и столбцов, удовлетворяющие условию Ui + Vj = Cij, где Cij — стоимость перевозки, а Ui и Vj — потенциалы строки и столбца соответственно.
+        2. Для каждой свободной ячейки рассчитывают оценку: Aij = Ui + Vj - Cij. Если все Aij >= 0 решение оптимально. Иначе выбираем ячейку с минимальной ячейкой для улучшения решения.
+        3. Составляют цикл перераспределения грузов, чтобы уменьшить стоимость. Вдоль цикла пересчитывают значения, сохраняя выполнение ограничений.
+        4. Повторяют процесс, пока не будет достигнута оптимальность.
+    """.trimIndent()
+
+    solutionSteps.add(Pair(description, null))
 
     description = "Начальная матрица"
     solutionSteps.add(Pair(description, resMatrix))
 
-    Log.d("FIRST_DEATH", "UV BEFORE")
-
-    description = "Найдем U и V"
     var uAndV = findUAndV(resMatrix)
-
-    Log.d("FIRST_DEATH", "UV PASSED")
+    description = "Найдем U и V.\nU = ${uAndV.first}, V = ${uAndV.second}"
 
     resMatrix = resMatrix.copy(u = uAndV.first, v = uAndV.second)
 
@@ -46,21 +58,15 @@ fun calculateSolutionPotentialsMethod(
     description = "Найдем оценки для свободных клеток"
     resMatrix = evaluateEvaluationsForFreeCells(resMatrix)
 
-    Log.d("FIRST_DEATH", "EVALUATIONS PASSED")
-
     solutionSteps.add(Pair(description, resMatrix))
 
     var lowestEvaluatedCell = findLowestEvaluatedCell(resMatrix)
-
-    Log.d("FIRST_DEATH", "LOWEST PASSED")
 
     var root = TreeNode(lowestEvaluatedCell)
 
     val path = mutableListOf(listOf<TreeNode>())
 
     while (lowestEvaluatedCell.value < 0) {
-
-        Log.d("ALL", "LOWEST ===== ${lowestEvaluatedCell}")
 
         fun findAllChildren(node: TreeNode, visited: MutableSet<Element> = mutableSetOf()) {
 
@@ -70,8 +76,9 @@ fun calculateSolutionPotentialsMethod(
             resMatrix.c.forEachIndexed { indexA, row ->
                 row.forEachIndexed { indexB, cTile ->
 
-                    val isElementOnTheSameCrossAndNotEqual = (indexA == node.value.indexA || indexB == node.value.indexB)
-                            && !(indexA == node.value.indexA && indexB == node.value.indexB)
+                    val isElementOnTheSameCrossAndNotEqual =
+                        (indexA == node.value.indexA || indexB == node.value.indexB)
+                                && !(indexA == node.value.indexA && indexB == node.value.indexB)
 
                     if (isElementOnTheSameCrossAndNotEqual) {
 
@@ -84,7 +91,7 @@ fun calculateSolutionPotentialsMethod(
                         if (newElement !in visited) {
                             val newNode = TreeNode(newElement)
 
-                            if (cTile.x != 0 || newElement == root.value) {
+                            if (cTile.x != null || newElement == root.value) {
                                 newNode.addAncestor(node)
                                 node.born(newNode)
                             }
@@ -139,86 +146,202 @@ fun calculateSolutionPotentialsMethod(
 
         findAllChildren(root)
 
-        var minX = Int.MAX_VALUE
+        val chosenPath = path.choosePath(curMatrix = resMatrix)
 
+        val minX = findMinXForPath(chosenPath, resMatrix.c)
 
-        Log.d("PATHS", path[0].joinToString("\n"))
+        resMatrix = updateDForPath(resMatrix, chosenPath, minX)
 
+        resMatrix = resMatrix.updateX
 
-        path[0].dropLast(1).forEach { node ->
-            minX = min(resMatrix.c[node.value.indexA][node.value.indexB].x ?: 0, minX)
-        }
+        resMatrix = resMatrix.makeEvaluationZero()
 
-        var alt = -1
+        val cell = chosenPath.last().value
+        val magicCTile = resMatrix.c[cell.indexA][cell.indexB]
+        val cellToStay = if (magicCTile.theta == 0 || MagicCells.cells.contains(magicCTile)) Pair(cell.indexA, cell.indexB) else null
 
-        path[0].reversed().forEach { node ->
+        resMatrix = resMatrix.copy(c = resMatrix.c.correctBasis(cellToStay))
+        resMatrix = resMatrix.copy(c = resMatrix.c.absolutelyMagicalBasis())
 
-            resMatrix = resMatrix.copy(
-                c = resMatrix.c.mapIndexed { indexA, row ->
-                    if (node.value.indexA == indexA)
-                        row.mapIndexed { indexB, cTile ->
-                            if (node.value.indexB == indexB) {
-                                alt *= -1
-                                cTile.copy(d = alt * minX, evaluation = 0)
-                            }
-                            else cTile
-                        }
-                    else row
-                }
-            )
-        }
+        description = "Тута типа аписани путье"
+        solutionSteps.add(Pair(description, null))
 
-        path[0].reversed().forEach { node ->
-            resMatrix = resMatrix.copy(
-                c = resMatrix.c.mapIndexed { indexA, row ->
-                    row.mapIndexed { indexB, cTile ->
-                        cTile.x?.let { x ->
-                            if (indexA == node.value.indexA && indexB == node.value.indexB)
-                                cTile.copy(x = x + (cTile.d ?: 0))
-                            else cTile
-                        } ?: cTile
-                    }
-                }
-            )
-        }
+        resMatrix = resMatrix.makeDNull()
 
-
-        resMatrix = resMatrix.copy(
-            c = resMatrix.c.mapIndexed { indexA, row ->
-                    row.mapIndexed { indexB, cTile ->
-                        cTile.copy(d = 0, evaluation = 0)
-                    }
-            }
-        )
-
-
-        Log.d("FIND", "UV STARTED")
-        description = "Найдем U и V"
         uAndV = findUAndV(resMatrix)
-        Log.d("FIND", "UV ENDED")
+
+        description = "Найдем U и V.\nU = [${uAndV.first}], V = [${uAndV.second}]"
 
         resMatrix = resMatrix.copy(u = uAndV.first, v = uAndV.second)
 
         solutionSteps.add(Pair(description, resMatrix))
 
-        description = "Найдем оценки для свободных клеток"
+        description = "Найдём оценки для свободных клеток"
         resMatrix = evaluateEvaluationsForFreeCells(resMatrix)
 
-        solutionSteps.add(Pair(description, resMatrix))
+        solutionSteps += Pair(description, resMatrix)
 
         lowestEvaluatedCell = findLowestEvaluatedCell(resMatrix)
+
+        description =
+            "Найдём ячейку с наименьей оценкой." +
+                    "\nОна находится на позиции С${(lowestEvaluatedCell.indexA * 10 + lowestEvaluatedCell.indexB).minifyDigits()}"
+        solutionSteps += Pair(description, null)
 
         root = TreeNode(lowestEvaluatedCell)
 
         path.clear()
+
     }
 
-    description = "Общая стоимость перевозок по этому плану:"
+    val res = resMatrix.c.sumOf { row ->
+        row.sumOf { (it.c ?: 0) * (it.x ?: 0) }
+    }
+
+    description = "Общая стоимость перевозок по этому плану f = $res"
 
     solutionSteps.add(Pair(description, resMatrix))
 
     return solutionSteps
 }
+
+private fun MutableList<List<TreeNode>>.choosePath(
+    curMatrix: Matrix
+): List<TreeNode> {
+
+    var badPaths = mutableListOf<List<TreeNode>>()
+    var selectedPath = this.first { it.isNotEmpty() }
+
+    if (selectedPath.isEmpty()) return emptyList()
+
+    fun Matrix.calcRes() = this.c.sumOf { row ->
+        row.sumOf { (it.c ?: 0) * (it.x ?: 0) }
+    }
+
+    var newF = matrix.calcRes()
+
+    var matrix = curMatrix
+
+    fun List<TreeNode>.checkPath(m: Matrix, minPos: Triple<Int, Int, Int>): Boolean {
+
+        val cTile = m.c[minPos.first][minPos.second]
+
+        return if (cTile.x == null || cTile.theta == null) false
+        else (cTile.x ?: 0) - cTile.theta == 0
+    }
+
+    this.filter { it.isNotEmpty() }.forEach {
+
+        var tryMatrix = matrix
+
+        val minX = findMinXForPath(it, tryMatrix.c)
+        var minPos: Triple<Int, Int, Int> = Triple(0, 0, Int.MAX_VALUE)
+
+        tryMatrix.c.forEachIndexed { i, row ->
+            row.forEachIndexed { j, el ->
+                el.x?.let { x ->
+                    if (x < minPos.third)
+                        minPos = Triple(i, j, x)
+                }
+            }
+        }
+
+        tryMatrix = updateDForPath(tryMatrix, it, minX)
+        tryMatrix = tryMatrix.updateX
+
+        if (it.checkPath(tryMatrix, minPos)) {
+
+            val cell = selectedPath.last().value
+            val cellToStay = if (tryMatrix.c[cell.indexA][cell.indexB].theta == 0) Pair(cell.indexA, cell.indexB) else null
+
+            tryMatrix = tryMatrix.makeEvaluationZero()
+            tryMatrix = tryMatrix.copy(c = tryMatrix.c.correctBasis(cellToStay).absolutelyMagicalBasis())
+            tryMatrix = tryMatrix.makeDNull()
+
+            if (tryMatrix.isValid) {
+                val f = tryMatrix.calcRes()
+
+                if (f <= newF) {
+                    matrix = tryMatrix
+                    newF = f
+                    selectedPath = it
+                }
+            }
+        }
+    }
+
+    return selectedPath
+}
+
+private fun findMinXForPath(path: List<TreeNode>, c: List<List<CTile>>): Int {
+    var minX = Int.MAX_VALUE
+
+    path.dropLast(1).forEachIndexed { i, node ->
+        c[node.value.indexA][node.value.indexB].x?.let {
+            if (i % 2 == 0)
+                minX = min(it, minX)
+        }
+    }
+
+    return minX
+}
+
+private val Matrix.updateX
+    get(): Matrix = this.copy(
+        c = this.c.map { row ->
+            row.map { cTile ->
+                if (cTile.x == null && cTile.theta == 0)
+                    cTile.copy(x = 0)
+                else if (cTile.theta != 0)
+                    cTile.copy(x = (cTile.x ?: 0) + (cTile.theta ?: 0))
+                else cTile
+            }
+        }
+    )
+
+private fun Matrix.makeEvaluationZero() =
+    this.copy(
+        c = this.c.map { row ->
+            row.map { cTile ->
+                cTile.copy(evaluation = 0)
+            }
+        }
+    )
+
+private fun Matrix.makeDNull() =
+    this.copy(
+        c = this.c.map { row ->
+            row.map { cTile ->
+                cTile.copy(theta = null)
+            }
+        }
+    )
+
+private fun updateDForPath(matrix: Matrix, path: List<TreeNode>, minX: Int): Matrix {
+
+    var initialMatrix = matrix
+
+    var alt = -1
+    path.reversed().forEach { node ->
+        alt *= -1
+        initialMatrix = initialMatrix.updateD(alt, minX, node.value.indexA, node.value.indexB)
+    }
+
+    return initialMatrix
+}
+
+
+private fun Matrix.updateD(alt: Int, minX: Int, nodeIndexA: Int, nodeIndexB: Int) = this.copy(
+    c = this.c.mapIndexed { indexA, row ->
+        if (nodeIndexA == indexA)
+            row.mapIndexed { indexB, cTile ->
+                if (nodeIndexB == indexB) {
+                    cTile.copy(theta = alt * minX, evaluation = 0)
+                } else cTile
+            }
+        else row
+    }
+)
 
 private fun makePath(node: TreeNode): List<TreeNode> {
 
@@ -263,8 +386,11 @@ private fun evaluateEvaluationsForFreeCells(
     innerMatrix = innerMatrix.copy(
         c = innerMatrix.c.mapIndexed { indexAmap, row ->
             row.mapIndexed { indexBmap, cTile ->
-                if ((cTile.x ?: 0) == 0)
-                    cTile.copy(evaluation = (cTile.c ?: 0) - (matrix.u[indexAmap] ?: 0) - (matrix.v[indexBmap] ?: 0))
+                if (cTile.x == null)
+                    cTile.copy(
+                        evaluation = (cTile.c ?: 0) - (matrix.u[indexAmap]
+                            ?: 0) - (matrix.v[indexBmap] ?: 0)
+                    )
                 else cTile
             }
         }
@@ -290,67 +416,53 @@ private fun findUAndV(
             matrix.c[i][j].x?.let { x ->
                 matrix.c[i][j].c?.let { c ->
 
-                    if (x != 0) {
-                        if (isFirstIteration) {
+                    if (isFirstIteration) {
 
-                            v[j] = 0
-                            u[i] = c
+                        v[j] = 0
+                        u[i] = c
 
-                            isFirstIteration = false
-                        } else {
-                            u[i]?.let { u ->
-                                v[j] = c - u
-                            }
-                            v[j]?.let { v ->
-                                u[i] = c - v
-                            }
+                        isFirstIteration = false
+                    } else {
+                        if (u[i] != null)
+                            v[j] = c - (u[i] ?: 0)
+                        else if (v[j] != null)
+                            u[i] = c - (v[j] ?: 0)
 
-                            if (u[i] == null && v[j] == null)
-                                unfounded.add(Pair(i, j))
-                        }
+                        if (u[i] == null && v[j] == null)
+                            unfounded.add(Pair(i, j))
                     }
                 }
             }
         }
+
     }
-
-    Log.d("UV", "U ===== ${u.joinToString(" ")} V ===== ${v.joinToString(" ")}")
-
-    Log.d("FIRST_DEATH", "FOR FOR PASSED")
 
     while (unfounded.isNotEmpty()) {
 
         val iterator = unfounded.iterator()
 
-        Log.d("FIRST_DEATH", "OUTER_WHILE")
-
         while (iterator.hasNext()) {
-            Log.d("FIRST_DEATH", "ITERATOR STARTED")
             val pair = iterator.next()
-            Log.d("FIRST_DEATH", "ITERATOR ENDED")
             val i = pair.first
             val j = pair.second
 
             matrix.c[i][j].c?.let { c ->
-                u[i]?.let { u ->
-                    v[j] = c - u
-                } ?: 0
-                v[j]?.let { v ->
-                    u[i] = c - v
-                } ?: 0
-                Log.d("PAIR", "PAAAAAAAAAAAIR $pair Ui ${u[i]} Vj ${v[j]}")
+
+                if (u[i] != null)
+                    v[j] = c - (u[i] ?: 0)
+                else if (v[j] != null)
+                    u[i] = c - (v[j] ?: 0)
+
                 if (u[i] != null && v[j] != null) {
-                    Log.d("FIRST_DEATH", "REMOVE STARTED $pair")
                     iterator.remove()
-                    Log.d("FIRST_DEATH", "REMOVE ENDED")
                 }
             }
         }
     }
 
-    Log.d("FIRST_DEATH", "UV PASSED")
-
-    Log.d("ALL", "${Pair(u, v)}")
-
     return Pair(u, v)
+}
+
+object MagicCells {
+    val cells: MutableSet<CTile> = mutableSetOf()
 }

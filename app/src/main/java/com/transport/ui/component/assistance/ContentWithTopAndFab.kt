@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.rememberLazyListState
 
 import androidx.compose.material3.CircularProgressIndicator
 
@@ -55,7 +53,7 @@ import kotlin.math.roundToInt
  * Контейнер с верхним баром и плавающей кнопкой
  *
  * @param contentIsEmpty флаг того, что ничего нет и нужно оповестить пользователя об этом
- * @param shiftBottomBar сдвигает нижний бар вниз (сам бар за пределами данного контейнера)
+ * @param fullyExpandBars делает верхний бар и плавающую кнопку полностью видимыми
  * @param topBar верхний бар
  * @param floatingButton плавающая кнопка
  * @param content основной контент
@@ -63,12 +61,13 @@ import kotlin.math.roundToInt
  * @author Михаил Гонтарев (KiREHwYE)
  */
 @Composable
-fun ListWithTopAndFab(
-    shiftBottomBar: () -> Unit = {},
+fun ContentWithTopAndFab(
+    fullyExpandBars: () -> Boolean = { false },
     topBar: @Composable () -> Unit = {},
     floatingButton: @Composable () -> Unit = {},
     content: @Composable (Modifier, (Boolean) -> Unit) -> Unit = { _, _ -> },
 ) {
+
     val coroutineScope = rememberCoroutineScope()
 
     /** измерения контейнера в пикселях */
@@ -90,7 +89,7 @@ fun ListWithTopAndFab(
     /** высота плавающей кнопки в пикселях */
     val fabWidthPx = remember { mutableStateOf(0f) }
     /** свдиг нижнего бара по высоте */
-    val fabOffsetWidthPx = remember { mutableStateOf(0f) }
+    val fabOffsetHeightPx = remember { mutableStateOf(0f) }
 
     /** отступ нижней системной панели навигации */
     val bottomInsetPaddingPx = with(localDensity) {
@@ -121,14 +120,31 @@ fun ListWithTopAndFab(
         }
     }
 
+    /** Опускает плавающую кнопку, скрывая ее из области видимости */
+    fun shiftFloatingButtonDown() {
+        coroutineScope.launch {
+            while (fabOffsetHeightPx.value < 0) {
+                fabOffsetHeightPx.value += 5
+                delay(1)
+            }
+        }
+    }
+
+    LaunchedEffect(key1 = fullyExpandBars()) {
+        if (fullyExpandBars()) {
+            launch { shiftTopBarDown() }
+            launch { shiftFloatingButtonDown() }
+        }
+    }
+
     /** слушатель скролла экрана */
     val nestedScrollConnection = remember {
         object : NestedScrollConnection {
             override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
                 val deltaY = available.y
 
-                val newBottomBarOffset = fabOffsetWidthPx.value + deltaY
-                fabOffsetWidthPx.value =
+                val newBottomBarOffset = fabOffsetHeightPx.value + deltaY
+                fabOffsetHeightPx.value =
                     newBottomBarOffset.coerceIn(
                         minimumValue = -fabWidthPx.value,
                         maximumValue = 0f
@@ -165,45 +181,14 @@ fun ListWithTopAndFab(
             .background(color = White)
             .nestedScroll(nestedScrollConnection)
     ) {
-        when (isEmpty) {
-            true -> {
-                /** Если список пустой, показываем индикатор загрузки */
-                AnimatedVisibility(
-                    visible = true,
-                    enter = scaleIn(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium))
-                            + fadeIn(animationSpec = spring(dampingRatio = Spring.DampingRatioLowBouncy, stiffness = Spring.StiffnessMedium)),
-                    modifier = Modifier
-                        .fillMaxSize()
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .zIndex(0f)
-                            .dynamicPadding(top = { noElementsMessageTopPadding })
-                            .padding(horizontal = Dimens.uniPadding)
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                        content = {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(52.dp),
-                                color = Peach,
-                                strokeWidth = 6.dp,
-                            )
-                        }
-                    )
-                }
-            }
-            false -> {
-                /** Контент */
-                content(
-                    Modifier
-                        .zIndex(0f)
-                        .dynamicPadding(top = { spaceHeight.value.dp })
-                        .padding(horizontal = Dimens.uniPadding)
-                        .fillMaxSize()
-                ) { bool ->
-                    isEmpty = bool
-                }
-            }
+        content(
+            Modifier
+                .zIndex(0f)
+                .dynamicPadding(top = { spaceHeight.value.dp })
+                .padding(horizontal = Dimens.uniPadding)
+                .fillMaxSize()
+        ) { bool ->
+            isEmpty = bool
         }
 
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -248,7 +233,7 @@ fun ListWithTopAndFab(
                 .offset {
                     IntOffset(
                         x = 0,
-                        y = -(fabOffsetWidthPx.value + bottomInsetPaddingPx).roundToInt()
+                        y = -(fabOffsetHeightPx.value + bottomInsetPaddingPx).roundToInt()
                     )
                 },
             contentAlignment = Alignment.Center

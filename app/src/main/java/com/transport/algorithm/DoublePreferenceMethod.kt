@@ -2,20 +2,31 @@ package com.transport.algorithm
 
 import android.util.Log
 import com.transport.model.Matrix
+import com.transport.ui.util.minifyDigits
 import kotlin.math.min
 
 fun calculateSolutionDoublePreferenceMethod(
     matrix: Matrix
 ): List<Pair<String, Matrix?>> {
 
-    val solutionSteps: MutableList<Pair<String, Matrix>> = mutableListOf()
+    val solutionSteps: MutableList<Pair<String, Matrix?>> = mutableListOf()
 
     var resMatrix = matrix
 
-    val initialDescription = "Начальная матрица"
+    var initialDescription = """
+        Основная идея заключается в выборе ячеек для распределения грузов на основе минимальной стоимости перевозок.
+
+        1. Из всей таблицы находят ячейку с минимальной стоимостью перевозки.
+        2. Распределяют максимально возможное количество груза в эту ячейку, удовлетворяя ограничения спроса и предложения.
+        3. Исключают строку или столбец, где спрос или предложение стали равны нулю, и корректируют таблицу.
+        4. Повторяют процесс до тех пор, пока все ограничения не будут выполнены.
+    """.trimIndent()
+
+    solutionSteps.add(Pair(initialDescription, null))
+
+    initialDescription = "Начальная матрица:"
     solutionSteps.add(Pair(initialDescription, resMatrix))
 
-    /** Находим минимумы в строках */
     resMatrix.a.forEachIndexed { indexA, _ ->
 
         var minElement = Int.MAX_VALUE
@@ -37,7 +48,7 @@ fun calculateSolutionDoublePreferenceMethod(
         )
     }
 
-    var stepDescription = "Находим минимумы на каждой строке"
+    var stepDescription = "Находим минимальные элементы на каждой строке. Отмечаем их"
     solutionSteps.add(Pair(stepDescription, resMatrix))
 
     /** Находим минимумы в столбцах */
@@ -61,11 +72,14 @@ fun calculateSolutionDoublePreferenceMethod(
         )
     }
 
-    stepDescription = "Находим минимумы в каждом столбце"
+    stepDescription = "Находим минимальные элементы в каждом столбце. Так же отмечаем их"
     solutionSteps.add(Pair(stepDescription, resMatrix))
 
     var indexA = 0
     var indexB = 0
+
+    stepDescription = "Начинаем с элементов с двойным приоритетом"
+    solutionSteps.add(Pair(stepDescription, null))
 
     /** Находим x для клеток с 2-мя галочками */
     while (indexA < resMatrix.a.size && indexB < resMatrix.b.size) {
@@ -91,6 +105,8 @@ fun calculateSolutionDoublePreferenceMethod(
                         if (i != indexA)
                             columnNum -= resMatrix.c[i][indexB].x ?: 0
 
+                    val xValue = "X${((indexA + 1) * 10 + indexB + 1).minifyDigits()}"
+
                     if (rowNum < columnNum) {
 
                         resMatrix = resMatrix.addZeroes(
@@ -100,7 +116,7 @@ fun calculateSolutionDoublePreferenceMethod(
                             value = rowNum
                         )
                         stepDescription =
-                            "Устанавливаем X[$indexA][$indexB] для элемента дважды отмеченного минимальным = min([$indexA], [$indexB]) = $rowNum"
+                            "Устанавливаем $xValue для элемента дважды отмеченного минимальным = min(A${(indexA + 1).minifyDigits()}, B${(indexB + 1).minifyDigits()}) = $rowNum"
                     } else {
                         resMatrix = resMatrix.addZeroes(
                             isForRow = false,
@@ -109,7 +125,7 @@ fun calculateSolutionDoublePreferenceMethod(
                             value = columnNum
                         )
                         stepDescription =
-                            "Устанавливаем X[$indexA][$indexB] для элемента дважды отмеченного минимальным = min([$indexA], [$indexB]) = $columnNum"
+                            "Устанавливаем $xValue для элемента дважды отмеченного минимальным = min(A${(indexA + 1).minifyDigits()}, B${(indexB + 1).minifyDigits()}) = $columnNum"
                     }
 
                     if (indexB == resMatrix.b.size - 1) {
@@ -131,7 +147,9 @@ fun calculateSolutionDoublePreferenceMethod(
     indexA = 0
     indexB = 0
 
-    /** Находим x для клеток с 1-ой галочкой */
+    stepDescription = "Тоже самое делаем для элементов с одинарным приоритетом"
+    solutionSteps.add(Pair(stepDescription, null))
+
     while (indexA < resMatrix.a.size && indexB < resMatrix.b.size) {
 
         resMatrix.a[indexA]?.let { a ->
@@ -159,6 +177,8 @@ fun calculateSolutionDoublePreferenceMethod(
                         if (i != indexA)
                             columnNum -= resMatrix.c[i][indexB].x ?: 0
 
+                    val xValue = "X${((indexA + 1) * 10 + indexB + 1).minifyDigits()}"
+
                     if (rowNum < columnNum) {
                         resMatrix = resMatrix.addZeroes(
                             isForRow = true,
@@ -167,7 +187,7 @@ fun calculateSolutionDoublePreferenceMethod(
                             value = rowNum
                         )
                         stepDescription =
-                            "Устанавливаем X[$indexA][$indexB] для элемента единожды отмеченного минимальным = min([$indexA] минус сумма элементов по строке до него, [$indexB] минус сумма элементов по столбцу до него) = $rowNum"
+                            "Устанавливаем $xValue для элемента единожды отмеченного минимальным = min(A${(indexA + 1).minifyDigits()} минус сумма элементов по строке до него, B${(indexB + 1).minifyDigits()} минус сумма элементов по столбцу до него) = $rowNum"
                     } else {
                         resMatrix = resMatrix.addZeroes(
                             isForRow = false,
@@ -176,8 +196,7 @@ fun calculateSolutionDoublePreferenceMethod(
                             value = columnNum
                         )
                         stepDescription =
-                            "Устанавливаем X[$indexA][$indexB] для элемента единожды отмеченного минимальным = min([$indexA] минус сумма элементов по строке до него, [$indexB] минус сумма элементов по столбцу до него) = $columnNum"
-                    }
+                            "Устанавливаем $xValue для элемента единожды отмеченного минимальным = min(A${(indexA + 1).minifyDigits()} минус сумма элементов по строке до него, B${(indexB + 1).minifyDigits()} минус сумма элементов по столбцу до него) = $columnNum"                    }
 
                     if (indexB == resMatrix.b.size - 1) {
                         indexA++
@@ -190,6 +209,9 @@ fun calculateSolutionDoublePreferenceMethod(
             }
         }
     }
+
+    stepDescription = "Для оставшихся элементом воспользуемся методом минимального элемента"
+    solutionSteps.add(Pair(stepDescription, null))
 
     var minElement = MinElement()
 
@@ -231,6 +253,7 @@ fun calculateSolutionDoublePreferenceMethod(
                 if (i != indexA)
                     columnNum -= resMatrix.c[i][minElement.b].x ?: 0
 
+            val xValue = "X${((indexA + 1) * 10 + indexB + 1).minifyDigits()}"
 
             if (rowNum < columnNum) {
                 resMatrix = resMatrix.addZeroes(
@@ -240,7 +263,7 @@ fun calculateSolutionDoublePreferenceMethod(
                     value = rowNum
                 )
                 stepDescription =
-                    "Устанавливаем X[$indexA][$indexB] для оставшихся незаполненных и неотмеченных ячеек = min([$indexA] минус сумма элементов по строке до него, [$indexB] минус сумма элементов по столбцу до него) = $rowNum"
+                    "Устанавливаем $xValue для оставшихся незаполненных и неотмеченных ячеек = min(A${(indexA + 1).minifyDigits()} минус сумма элементов по строке до него, B${(indexB + 1).minifyDigits()} минус сумма элементов по столбцу до него) = $rowNum"
             } else {
                 resMatrix = resMatrix.addZeroes(
                     isForRow = false,
@@ -249,25 +272,16 @@ fun calculateSolutionDoublePreferenceMethod(
                     value = columnNum
                 )
                 stepDescription =
-                    "Устанавливаем X[$indexA][$indexB] для оставшихся незаполненных и неотмеченных ячеек = min([$indexA] минус сумма элементов по строке до него, [$indexB] минус сумма элементов по столбцу до него) = $rowNum"
-            }
+                    "Устанавливаем $xValue для оставшихся незаполненных и неотмеченных ячеек = min(A${(indexA + 1).minifyDigits()} минус сумма элементов по строке до него, B${(indexB + 1).minifyDigits()} минус сумма элементов по столбцу до него) = $columnNum"            }
 
             solutionSteps.add(Pair(stepDescription, resMatrix))
         }
 
     } while (doesNonValuedElementExist)
 
-    var sum = 0
-
-    resMatrix.c.forEach { row ->
-        row.forEach { cTile ->
-            cTile.x?.let { x ->
-                cTile.c?.let { c ->
-                    sum += x * c
-                }
-            }
-        }
-    }
+    val result = matrix.c.sumOf { row -> row.sumOf { tile -> (tile.c ?: 0) * (tile.x ?: 0) } }
+    val description = "Стоимость пути вычислим как сумму Xi * Cij для всех ячеек матрицы.\nТаким образом, для метода минимального элемента, получим стоимость пути f = $result"
+    solutionSteps += Pair(description, null)
 
     return solutionSteps
 }

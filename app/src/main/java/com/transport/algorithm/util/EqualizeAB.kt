@@ -1,4 +1,4 @@
-package com.transport.algorithm
+package com.transport.algorithm.util
 
 import com.transport.model.CTile
 import com.transport.model.Matrix

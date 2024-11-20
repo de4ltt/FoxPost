@@ -31,16 +31,6 @@ fun ABDisplayTile(
     textValue: String = "",
 ) {
 
-    var isComposed by remember {
-        mutableStateOf(false)
-    }
-
-    val scale by animateFloatAsState(targetValue = if (isComposed) 1f else 0f)
-
-    LaunchedEffect(Unit) {
-        isComposed = true
-    }
-
     val textStyle = TextStyle(
         fontWeight = FontWeight.W400,
         color = Black,
@@ -52,10 +42,6 @@ fun ABDisplayTile(
 
     Box(
         modifier = modifier
-            .graphicsLayer(
-                scaleX = scale,
-                scaleY = scale
-            )
             .clip(tileShape)
             .background(LightGrey),
         contentAlignment = Alignment.Center

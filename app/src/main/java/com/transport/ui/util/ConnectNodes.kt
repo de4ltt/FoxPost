@@ -14,7 +14,7 @@ val MatrixC.connectingNodes
 
         val nodes: Nodes = this.mapIndexed { i, row ->
             row.mapIndexed { j, it ->
-                Triple(i, j, (it.d ?: 0) != 0)
+                Triple(i, j, (it.theta ?: 0) != 0)
             }
         }
 

@@ -2,13 +2,17 @@ package com.transport.algorithm
 
 import com.transport.model.CTile
 import com.transport.model.Matrix
+import com.transport.ui.util.minifyDigits
 
 fun calculateSolutionMinimalElementMethod(
     initialMatrix: Matrix
 ): List<Pair<String, Matrix?>> {
 
     var matrix = initialMatrix
-    val solutions = mutableListOf<Pair<String, Matrix>>()
+    val solutions = mutableListOf<Pair<String, Matrix?>>()
+
+    val initialA = matrix.a
+    val initialB = matrix.b
 
     fun findMinimalElem(matrix: Matrix): Pair<Int, Int>? {
         val c = matrix.c
@@ -36,7 +40,7 @@ fun calculateSolutionMinimalElementMethod(
             c = matrix.c.mapIndexed { k, row ->
                 row.mapIndexed { m, value ->
                     CTile(
-                        d = value.d,
+                        theta = value.theta,
                         c = value.c,
                         x = if (i == k && j == m) amount else value.x
                     )
@@ -51,25 +55,32 @@ fun calculateSolutionMinimalElementMethod(
         return matrix.a.all { it == 0 } && matrix.b.all { it == 0 }
     }
 
-    val initialDescription = "Суть метода заключается в том, что мы итерационно будем выбирать элемент " +
+    var initialDescription = "Суть метода заключается в том, что мы итерационно будем выбирать элемент " +
             "с минимальной стоимостью и устанавливать максимально возможное количество доставленных товаров до тех пор," +
-            " пока запасы мощностей и потребностей не иссякнут.\nНачальная матрица:"
-    solutions += Pair(initialDescription, matrix.copy())
+            " пока запасы мощностей и потребностей не иссякнут."
+    solutions += Pair(initialDescription, null)
+
+    initialDescription = "Начальная матрица:"
+    solutions += Pair(initialDescription, matrix.copy(a = initialA, b = initialB))
 
     while (!checkForCompletion()) {
-        val minElemPos = findMinimalElem(matrix)
 
-        if (minElemPos == null) break
+        val minElemPos = findMinimalElem(matrix) ?: break
 
         val (i, j) = minElemPos
 
         val reduce = reduceAB(i, j)
 
+        val xValue = "X${((i + 1) * 10 + j + 1).minifyDigits()}"
+
         val stepDescription =
-            "Минимальный элемент находится на позиции [$i, $j]. C[$i][$j] = ${matrix.c[i][j].c}. Устанавливаем X[$i][$j] = min(A[$i], B[$j]) = $reduce"
-        solutions += Pair(stepDescription, matrix.copy())
+            "Минимальный элемент находится на позиции C${(i * 10 + j).minifyDigits()} = ${matrix.c[i][j].c}. Устанавливаем $xValue = min(A${(i + 1).minifyDigits()}, B${(j + 1).minifyDigits()}) = $reduce"
+        solutions += Pair(stepDescription, matrix.copy(a = initialA, b = initialB))
     }
 
     val result = matrix.c.sumOf { row -> row.sumOf { tile -> (tile.c ?: 0) * (tile.x ?: 0) } }
+    val description = "Стоимость пути вычислим как сумму Xi * Cij для всех ячеек матрицы.\nТаким образом, для метода минимального элемента, получим стоимость пути f = $result"
+    solutions += Pair(description, null)
+
     return solutions
 }
